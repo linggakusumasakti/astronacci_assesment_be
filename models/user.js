@@ -10,10 +10,13 @@ const userSchema = new Schema({
   firstName: {
     type: String,
   },
-  lastNmae: {
+  lastName: {
     type: String,
   },
   detailInformation: {
+    type: String,
+  },
+  code: {
     type: String,
   },
   password: {

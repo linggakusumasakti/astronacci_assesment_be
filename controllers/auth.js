@@ -16,11 +16,23 @@ exports.register = async (req, res, next) => {
         username: username,
         password: hashedPw,
         firstName: firstName,
-        lastNmae: lastName,
+        lastName: lastName,
         detailInformation: detailInformation
       });
       const result = await user.save();
-      res.status(201).json({ message: 'User created!', userId: result._id });
+      const token = jwt.sign(
+        {
+          username: result.username,
+          userId: result._id.toString()
+        },
+        process.env.SECRET_KEY,
+      );
+      res.json({
+        code: 200,
+        status: "success",
+        message: "Success register",
+        data: token,
+      });
   } catch (err) {
     if (!err.statusCode) {
       err.statusCode = 500;
@@ -49,12 +61,18 @@ exports.login = async (req, res, next) => {
       }
       const token = jwt.sign(
         {
-          email: loadedUser.email,
+          username: loadedUser.username,
           userId: loadedUser._id.toString()
         },
         process.env.SECRET_KEY,
       );
-      res.status(200).json({ token: token, userId: loadedUser._id.toString() });
+      res.json({
+        code: 200,
+        status: "success",
+        message: "Success login",
+        data: token,
+      });
+    
     } catch (err) {
       if (!err.statusCode) {
         err.statusCode = 500;
@@ -62,3 +80,59 @@ exports.login = async (req, res, next) => {
       next(err);
     }
   };
+
+
+exports.forgotPassword = async (req, res, next) => {
+  const username = req.body.username;
+  try {
+    const user = await User.findOne({ username });
+
+    if (!user) {
+      const error = new Error("User not found.");
+      error.statusCode = 404;
+      throw error;
+    }
+
+    const code = Math.floor(100000 + Math.random() * 900000).toString();
+
+    user.code = code;
+    await user.save();
+
+    res.json({
+      code: 200,
+      status: "success",
+      message: `Verification code generated`,
+      data: user.code
+    });
+  } catch (err) {
+    if (!err.statusCode) {
+      err.statusCode = 500;
+    }
+    next(err);
+  }
+};
+
+exports.resetPassword = async (req, res, next) => {
+  const code = req.body.code;
+  const password = req.body.password;
+  try {
+    const user = await User.findOne({ code: code });
+    const hashedPw = await bcrypt.hash(password, 12);
+
+    user.password = hashedPw;
+    user.code = null;
+    await user.save();
+
+    res.json({
+      code: 200,
+      status: "success",
+      message: "Password updated successfully",
+    });
+  } catch (err) {
+    if (!err.statusCode) {
+      err.statusCode = 500;
+    }
+    next(err);
+  }
+};
+

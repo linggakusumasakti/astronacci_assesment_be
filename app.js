@@ -10,6 +10,7 @@ const app = express();
 app.use(express.json());
 
 const authRoutes = require('./routes/auth');
+const userRoutes = require('./routes/user');
 
 app.use((req, res, next) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -22,6 +23,7 @@ app.use((req, res, next) => {
 });
 
 app.use('/api/auth', authRoutes);
+app.use('/api/user', userRoutes);
 
 app.use((error, req, res, next) => {
   const status = error.statusCode || 500;
