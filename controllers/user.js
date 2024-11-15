@@ -50,7 +50,7 @@ exports.getUser = async (req, res, next) => {
 
 exports.getSearchUser = async (req, res, next) => {
   const username = req.query.username;
-  const user = await User.findOne({ username: username });
+  const user = await User.find({ username: { $regex: username, $options: 'i' } });
   try {
     if (!user) {
       const error = new Error("Could not find user.");
